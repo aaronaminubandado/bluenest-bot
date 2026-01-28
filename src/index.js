@@ -30,6 +30,58 @@ bot.start((ctx) => {
 	);
 });
 
+/* ───────────────────── COMMANDS ───────────────────── */
+
+bot.command("help", (ctx) =>
+	safeReply(
+		ctx,
+		`BlueNest Realty Bot Help
+
+You can:
+• Ask about buying or renting
+• Schedule property viewings
+• Request a human agent
+
+Commands:
+/contact – Speak with an agent
+/help – Show this message`,
+	),
+);
+
+bot.command("contact", (ctx) => {
+	sessions[ctx.from.id] = { step: "name", lead: {} };
+	return safeReply(ctx, "Sure! May I have your name?");
+});
+
+bot.command("leads", (ctx) => {
+	if (!isAdmin(ctx)) {
+		return ctx.reply("This command is restricted to administrators.");
+	}
+
+	if (leads.length === 0) {
+		return ctx.reply("No leads captured yet.");
+	}
+
+	const formatted = leads
+		.map(
+			(l, i) =>
+				`${i + 1}. ${l.name}\nContact: ${l.contact}\nIntent: ${l.intent}\n`,
+		)
+		.join("\n");
+
+	ctx.reply(`Captured Leads:\n\n${formatted}`);
+});
+
+bot.command("stats", (ctx) => {
+	if (!isAdmin(ctx)) {
+		return ctx.reply("This command is for admins only.");
+	}
+
+	ctx.reply(
+		`Bot Stats\n\nLeads captured: ${leads.length}\nActive sessions: ${Object.keys(sessions).length}`,
+	);
+});
+
 /* ───────────────────── TEXT HANDLER ───────────────────── */
 
 bot.on("text", async (ctx) => {
@@ -130,63 +182,11 @@ bot.on("text", async (ctx) => {
 	}
 });
 
-/* ───────────────────── COMMANDS ───────────────────── */
-
-bot.command("help", (ctx) =>
-	safeReply(
-		ctx,
-		`BlueNest Realty Bot Help
-
-You can:
-• Ask about buying or renting
-• Schedule property viewings
-• Request a human agent
-
-Commands:
-/contact – Speak with an agent
-/help – Show this message`,
-	),
-);
-
-bot.command("contact", (ctx) => {
-	sessions[ctx.from.id] = { step: "name", lead: {} };
-	return safeReply(ctx, "Sure! May I have your name?");
-});
-
-bot.command("leads", (ctx) => {
-	if (!isAdmin(ctx)) {
-		return ctx.reply("This command is restricted to administrators.");
-	}
-
-	if (leads.length === 0) {
-		return ctx.reply("No leads captured yet.");
-	}
-
-	const formatted = leads
-		.map(
-			(l, i) =>
-				`${i + 1}. ${l.name}\nContact: ${l.contact}\nIntent: ${l.intent}\n`,
-		)
-		.join("\n");
-
-	ctx.reply(`Captured Leads:\n\n${formatted}`);
-});
-
-bot.command("stats", (ctx) => {
-	if (!isAdmin(ctx)) {
-		return ctx.reply("This command is for admins only.");
-	}
-
-	ctx.reply(
-		`Bot Stats\n\nLeads captured: ${leads.length}\nActive sessions: ${Object.keys(sessions).length}`,
-	);
-});
-
 /* ───────────────────── LIFECYCLE ───────────────────── */
 
-bot.launch().then(() => {
-	console.log("BlueNest Realty bot is running");
-});
+bot.launch();
+
+console.log("BlueNest Realty bot is running");
 
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
